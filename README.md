@@ -13,7 +13,7 @@ The application will send a message via telegram when it detects that the device
 - 1 Create a Telegram bot with the help of BotFather.
 - 2 Create a group with the bot and the user who will receive the alerts.
 - 3 Save the Bot Token: Provided by BotFathe.
-- 4 Save the ChatID: Use this link to find out the 'chat_id' - https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates -
+- 4 Save the ChatID: Use this link to find out the 'chat_id' - https://api.telegram.org/bot'YOUR_BOT_TOKEN'/getUpdates - Ex: https://api.telegram.org/botABC:123/getUpdates
 - 5 Some programming (ATTENTION):
     - Clone the repository.
     - Open the directory with Android Studio.
