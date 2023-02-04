@@ -26,8 +26,8 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
     }
 
     private void sendTelegramMessage(Context context, String message) {
-        String chatId = "-699833039";
-        String token = "5912589996:AAEP6UB_RkCRQ-2ht13YD96WGOe9QmXQ-4s";
+        String chatId = "";
+        String token = "";
         String url = "https://api.telegram.org/bot" + token + "/sendMessage?chat_id=" + chatId + "&text=" + message;
 
         RequestQueue queue = Volley.newRequestQueue(context);

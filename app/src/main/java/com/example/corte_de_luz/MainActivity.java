@@ -41,8 +41,6 @@ public class MainActivity extends AppCompatActivity {
             updatePowerStatus();
         });
 
-        startService(new Intent(this, TelegramMessageSenderService.class));
-
     }
 
     private boolean isPowerConnected(MainActivity context) {
