@@ -21,6 +21,12 @@ public class MainActivity extends AppCompatActivity {
         } else {
             powerStatusView.setText("Power Status: Disconnected");
         }
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
+        intentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
+
+        registerReceiver(new PowerConnectionReceiver(), intentFilter);
     }
 
     @Override
@@ -38,13 +44,10 @@ public class MainActivity extends AppCompatActivity {
 
         startService(new Intent(this, TelegramMessageSenderService.class));
 
-        IntentFilter filter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
-        registerReceiver(new PowerConnectionReceiver(), filter);
     }
 
     private boolean isPowerConnected(MainActivity context) {
-        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
-        return plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
+        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
+        return batteryManager.isCharging();
     }
 }
