@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(Intent.ACTION_POWER_CONNECTED);
         intentFilter.addAction(Intent.ACTION_POWER_DISCONNECTED);
-
         registerReceiver(new PowerConnectionReceiver(), intentFilter);
     }
 
@@ -34,7 +33,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextView powerStatusTextView = findViewById(R.id.power_status_text_view);
+        TextView powerStatusTextView = findViewById(R.id.power_status_view);
 
         updatePowerStatus();
 
@@ -47,7 +46,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isPowerConnected(MainActivity context) {
-        BatteryManager batteryManager = (BatteryManager) context.getSystemService(BATTERY_SERVICE);
-        return batteryManager.isCharging();
+        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        int plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1);
+        return plugged == BatteryManager.BATTERY_PLUGGED_AC || plugged == BatteryManager.BATTERY_PLUGGED_USB;
     }
 }
