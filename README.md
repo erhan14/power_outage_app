@@ -1,4 +1,4 @@
-# power_outage_app
+# Power Outage Alert APP ⚡
 
 ## Mobile application that notifies about power outage
 
