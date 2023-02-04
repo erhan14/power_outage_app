@@ -5,11 +5,11 @@
 ### Functioning
 The application will send a message via telegram when it detects that the device has stopped charging. In the event that the electric current returns, it will send a message notifying the user.
 
-## Requirements
+### Requirements
 - Phone, Tablet or Android Device with Telegram.
 - Android Studio to insert the .env constants and build the APK.
 
-## Installation
+### Installation
 - 1 Create a Telegram bot with the help of BotFather.
 - 2 Create a group with the bot and the user who will receive the alerts.
 - 3 Save the Bot Token: Provided by BotFathe.
