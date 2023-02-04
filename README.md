@@ -28,3 +28,7 @@ The application will send a message via telegram when it detects that the device
 <p align="center">
 <img width="186" alt="ex" src="https://user-images.githubusercontent.com/83615514/216787214-93de96a7-e3f7-4dd9-b512-2b43747634ec.png">
 </p>
+
+<p align="center">
+<img width="396" alt="ex1" src="https://user-images.githubusercontent.com/83615514/216787359-15db47ff-ac1c-4780-b24c-f9e579a56bba.png">
+</p>
