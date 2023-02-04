@@ -17,7 +17,7 @@ The application will send a message via telegram when it detects that the device
 - 5 Some programming (ATTENTION):
     - Clone the repository.
     - Open the directory with Android Studio.
-    - Open the '.env' file and copy the bot token and chat id inside the quotes "". Example: TELEGRAM_BOT_TOKEN = "ABC:123"
+    - Open the 'PowerConnectionReceiver.java' file and copy the bot token and chat id inside the quotes "". Example: String token = "ABC:123";
     - Save changes with Ctrl+S.
     - Go to the top, and create the APK: 'Build' -> 'Build Bundle(s) / APK(s)' -> 'Build APK(s)'
 - 6 Once the APK is created, save the file on the device that will serve as an alert.
