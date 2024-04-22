@@ -108,13 +108,13 @@ public class MyService extends LifecycleService {
         myview = inflater.inflate(R.layout.service_layout, null);
         layout = (FrameLayout) myview.findViewById(R.id.preview);
 
-        params = new WindowManager.LayoutParams(500, 300,
+        params = new WindowManager.LayoutParams(30, 50,
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.TOP | Gravity.LEFT;
-        params.x = 100;
-        params.y = 150;
+        params.x = 3;
+        params.y = 5;
 
 
         windowManager.addView(myview, params);

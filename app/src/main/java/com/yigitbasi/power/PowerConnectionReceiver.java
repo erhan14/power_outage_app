@@ -24,6 +24,11 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
         } else if (intent.getAction().equals(Intent.ACTION_POWER_DISCONNECTED)) {
             Toast.makeText(context, "Elektrik Kesildi", Toast.LENGTH_SHORT).show();
             sendTelegramMessage(context, context.getString(R.string.power_disconnected));
+        }else if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            Log.d(MainActivity.TAG, "Receive boot completed broadcast");
+            Intent activityIntent = new Intent(context, MainActivity.class);
+            activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(activityIntent);
         }
     }
 
