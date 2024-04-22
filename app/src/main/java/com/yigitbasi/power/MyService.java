@@ -67,6 +67,8 @@ public class MyService extends LifecycleService {
 
     public static String TAG = "YGTBS";
 
+    ProcessCameraProvider cameraProvider = null;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -120,9 +122,6 @@ public class MyService extends LifecycleService {
         //pengrad api
         try {
             bot = new TelegramBot(TelegramMessageSenderService.TELEGRAM_TOKEN);
-            final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(bos).build();
-
             // Register for updates
             bot.setUpdatesListener(updates -> {
                 // ... process updates
@@ -149,11 +148,18 @@ public class MyService extends LifecycleService {
                                                         this.getString(R.string.power_disconnected))));
                                         break;
                                     case "FOTO":
+                                        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(bos).build();
                                         imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
                                             @Override
                                             public void onImageSaved(@NonNull ImageCapture.OutputFileResults img) {
                                                 Log.i(TAG, "Image ready " + bos.size());
                                                 sendPhoto(bos);
+                                                try {
+                                                    bos.close();
+                                                } catch (IOException e) {
+                                                    Log.e(TAG, "Error bos closee ", e);
+                                                }
                                             }
 
                                             @Override
@@ -195,7 +201,7 @@ public class MyService extends LifecycleService {
             public void run() {
                 try {
 
-                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                    cameraProvider = cameraProviderFuture.get();
                     bindPreview(cameraProvider);
 
                 } catch (ExecutionException | InterruptedException e) {
