@@ -1,4 +1,4 @@
-package com.example.corte_de_luz;
+package com.yigitbasi.power;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -18,8 +18,13 @@ public class TelegramMessageSenderService extends IntentService {
     private static final String TAG = TelegramMessageSenderService.class.getSimpleName();
 
     private static final String TELEGRAM_API_URL = "https://api.telegram.org/bot";
-    private static final String TELEGRAM_TOKEN = "";
-    private static final String CHAT_ID = "";
+
+    public static final String TELEGRAM_TOKEN = "--";
+
+    public static final String TELEGRAM_USERNAME = "--";
+
+    public static final String TELEGRAM_CHAT_ID = "--";
+
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
 
     private OkHttpClient client;
@@ -37,7 +42,7 @@ public class TelegramMessageSenderService extends IntentService {
         if (message == null) return;
 
         String url = TELEGRAM_API_URL + TELEGRAM_TOKEN + "/sendMessage";
-        String json = "{\"chat_id\":\"" + CHAT_ID + "\",\"text\":\"" + message + "\"}";
+        String json = "{\"chat_id\":\"" + TELEGRAM_CHAT_ID + "\",\"text\":\"" + message + "\"}";
 
         RequestBody body = RequestBody.create(json, JSON);
         Request request = new Request.Builder()
@@ -48,10 +53,10 @@ public class TelegramMessageSenderService extends IntentService {
         try {
             Response response = client.newCall(request).execute();
             if (!response.isSuccessful()) {
-                Log.e(TAG, "Error al enviar mensaje de Telegram: " + response.message());
+                Log.e(TAG, "Error sending to Telegram: " + response.message());
             }
         } catch (IOException e) {
-            Log.e(TAG, "Error al enviar mensaje de Telegram: " + e.getMessage());
+            Log.e(TAG, "Error send Telegram: " + e.getMessage());
         }
     }
 }

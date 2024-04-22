@@ -1,32 +1,37 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFC107"
+    android:background="#EDCF74"
     android:gravity="center"
     android:orientation="vertical">
 
     <ImageView
         android:layout_width="1500dp"
         android:layout_height="150dp"
-        android:src="@drawable/storm"/>
+        android:src="@drawable/storm" />
 
-<!--    <TextView-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:text="@string/app_name"-->
-<!--        android:textColor="#795548"-->
-<!--        android:textSize="30sp"-->
-<!--        android:textStyle="bold"-->
-<!--        android:padding="20dp" />-->
+    <!--    <TextView-->
+    <!--        android:layout_width="wrap_content"-->
+    <!--        android:layout_height="wrap_content"-->
+    <!--        android:text="@string/app_name"-->
+    <!--        android:textColor="#795548"-->
+    <!--        android:textSize="30sp"-->
+    <!--        android:textStyle="bold"-->
+    <!--        android:padding="20dp" />-->
 
     <TextView
         android:id="@+id/power_status_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="20dp"
         android:textColor="#795548"
         android:textSize="30sp"
-        android:textStyle="bold"
-        android:padding="20dp"
-        android:gravity="center"/>
+        android:textStyle="bold" />
+
+    <androidx.camera.view.PreviewView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 </LinearLayout>
