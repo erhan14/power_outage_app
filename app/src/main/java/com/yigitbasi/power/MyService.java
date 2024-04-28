@@ -148,6 +148,7 @@ public class MyService extends LifecycleService {
                                                         this.getString(R.string.power_disconnected))));
                                         break;
                                     case "FOTO":
+                                    case "VIDEO":
                                         final ByteArrayOutputStream bos = new ByteArrayOutputStream();
                                         ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(bos).build();
                                         imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
@@ -223,7 +224,8 @@ public class MyService extends LifecycleService {
                 .build();
 
         CameraSelector cameraSelector = new CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                //.requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                 .build();
 
         ImageCapture.Builder builder = new ImageCapture.Builder();
@@ -244,6 +246,7 @@ public class MyService extends LifecycleService {
                 .setTargetRotation(rot)
                 .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                 .setResolutionSelector(selector)
+                .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
                 .build();
 
         preview.setSurfaceProvider(mSurfaceView.getSurfaceProvider());
