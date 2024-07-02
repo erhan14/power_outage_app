@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Elektrik Kesinti Algılayıcı</string>
-    <string name="power_connected">[~] Elektrik Mevcut</string>
-    <string name="power_disconnected">[!] Elektrikler Kesildi</string>
+    <string name="power_connected">[~] Elektrik %1$s Tarihinde Geldi</string>
+    <string name="power_disconnected">[!] Elektrikler %1$s Tarihinde Kesildi</string>
     <string name="power_status">Güç Durumu</string>
+    <string name="device_admin">Cihaz Yöneticisi</string>
+    <string name="admin_receiver_status">Cihaz Yöneticisi Durumu: %1$s</string>
+    <string name="admin_receiver_status_enabled">Cihaz Yöneticisi Aktif</string>
 </resources>

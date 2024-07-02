@@ -4,11 +4,15 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -47,6 +51,8 @@ import com.pengrad.telegrambot.request.SendPhoto;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
@@ -62,6 +68,8 @@ public class MyService extends LifecycleService {
     private PreviewView preview;
 
     private ImageCapture imageCapture = null;
+
+    private Camera camera = null;
 
     private TelegramBot bot = null;
 
@@ -139,13 +147,15 @@ public class MyService extends LifecycleService {
                                     case "HELP":
                                         bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "Desteklenen kelimeler: YARDIM\n" +
                                                 "FOTO\n" +
-                                                "VIDEO\n" +
+                                                "RESET\n" +
                                                 "DURUM..."));
                                         break;
                                     case "DURUM":
+                                        SimpleDateFormat fmt =
+                                                new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.ENGLISH);
                                         bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "" +
-                                                (MainActivity.isPowerConnected(this) ? this.getString(R.string.power_connected) :
-                                                        this.getString(R.string.power_disconnected))));
+                                                (MainActivity.isPowerConnected(this) ? this.getString(R.string.power_connected, fmt.format(new Date())) :
+                                                        this.getString(R.string.power_disconnected, fmt.format(new Date())))));
                                         break;
                                     case "FOTO":
                                     case "VIDEO":
@@ -159,16 +169,35 @@ public class MyService extends LifecycleService {
                                                 try {
                                                     bos.close();
                                                 } catch (IOException e) {
-                                                    Log.e(TAG, "Error bos closee ", e);
+                                                    Log.e(TAG, "Error bos close ", e);
                                                 }
                                             }
 
                                             @Override
                                             public void onError(@NonNull ImageCaptureException error) {
                                                 Log.e(TAG, "Error taking photo ", error);
+                                                bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "Error:" +
+                                                        error.toString()));
                                             }
                                         });
                                         break;
+                                    case "RESET":
+                                        bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "Telefon Baştan başlıyor."));
+                                        final Handler handler = new Handler(Looper.getMainLooper());
+                                        handler.postDelayed(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                ComponentName deviceAdmin = new ComponentName(MyService.this, DeviceAdminReceiver.class);
+                                                DevicePolicyManager manager =
+                                                        (DevicePolicyManager) MyService.this.getSystemService(Context.DEVICE_POLICY_SERVICE);
+                                                if(manager.isAdminActive(deviceAdmin)) {
+                                                    Log.d(TAG, "Rebooting...");
+                                                    manager.reboot(deviceAdmin);
+                                                } else {
+                                                    Log.d(TAG, "No admin app rights!!!...");
+                                                }                                            }
+                                        }, 1000);
+                                     break;
                                 }
                             }
                         }
@@ -252,7 +281,7 @@ public class MyService extends LifecycleService {
         preview.setSurfaceProvider(mSurfaceView.getSurfaceProvider());
 
         cameraProvider.unbindAll();
-        Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageCapture);
+        camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageCapture);
 
     }
 

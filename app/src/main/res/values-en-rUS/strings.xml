@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Power Outage</string>
-    <string name="power_connected">Power Connected</string>
-    <string name="power_disconnected">Power Disconnected</string>
+    <string name="power_connected">Power Connected %1$s</string>
+    <string name="power_disconnected">Power Disconnected %1$s</string>
     <string name="power_status">Power Status</string>
+    <string name="device_admin">Device Admin</string>
+    <string name="admin_receiver_status">Admin Status: %1$s</string>
+    <string name="admin_receiver_status_enabled">Device Admin On</string>
 </resources>

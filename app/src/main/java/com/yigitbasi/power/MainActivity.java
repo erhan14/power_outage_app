@@ -22,6 +22,8 @@ import androidx.lifecycle.LifecycleOwner;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -36,6 +38,8 @@ import android.util.Size;
 import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.TextureView;
+import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.google.common.util.concurrent.ListenableFuture;
@@ -49,6 +53,8 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 
@@ -63,13 +69,14 @@ public class MainActivity extends AppCompatActivity {
             boolean isPowerConnected = isPowerConnected(this);
             Log.d(TAG,"Updating power " + isPowerConnected);
             TextView powerStatusView = findViewById(R.id.power_status_view);
-
+            SimpleDateFormat fmt =
+                    new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.ENGLISH);
             if (isPowerConnected) {
                 powerStatusView.setText("Power Status: Connected");
-                receiver.sendTelegramMessage(this, this.getString(R.string.power_connected));
+                receiver.sendTelegramMessage(this, this.getString(R.string.power_connected, fmt.format(new Date())));
             } else {
                 powerStatusView.setText("Power Status: Disconnected");
-                receiver.sendTelegramMessage(this, this.getString(R.string.power_disconnected));
+                receiver.sendTelegramMessage(this, this.getString(R.string.power_disconnected, fmt.format(new Date())));
             }
 
             IntentFilter intentFilter = new IntentFilter();
@@ -115,6 +122,20 @@ public class MainActivity extends AppCompatActivity {
             Log.e(TAG,"Error creating telegram bot ", e);
         }*/
 
+        Button pushButton = (Button) findViewById(R.id.pushButton);
+        pushButton.setOnClickListener(new Button.OnClickListener() {
+            public void onClick(View v) {
+                ComponentName deviceAdmin = new ComponentName(MainActivity.this, DeviceAdminReceiver.class);
+                DevicePolicyManager manager =
+                        (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+                if(manager.isAdminActive(deviceAdmin)) {
+                    Log.d(TAG, "Rebooting...");
+                    manager.reboot(deviceAdmin);
+                } else {
+                    Log.d(TAG, "No admin app rights!!!...");
+                }
+            }
+        });
 
     }
 

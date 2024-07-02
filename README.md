@@ -24,6 +24,7 @@ The application will send a message via telegram when it detects that the device
 - 7 Install the APK on the device.
 - 8 Connect the charger and make sure the device charges.
 - 9 Keep the app running.
+- 10 adb shell dpm set-device-owner com.yigitbasi.power/.DeviceAdminReceiver to give admin app rights
 
 <p align="center">
 <img width="186" alt="ex" src="https://user-images.githubusercontent.com/83615514/216787214-93de96a7-e3f7-4dd9-b512-2b43747634ec.png">
