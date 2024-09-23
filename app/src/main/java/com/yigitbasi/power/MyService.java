@@ -1,18 +1,23 @@
 package com.yigitbasi.power;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -52,8 +57,11 @@ import com.pengrad.telegrambot.request.SendPhoto;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 
 public class MyService extends LifecycleService {
@@ -68,8 +76,6 @@ public class MyService extends LifecycleService {
     private PreviewView preview;
 
     private ImageCapture imageCapture = null;
-
-    private Camera camera = null;
 
     private TelegramBot bot = null;
 
@@ -125,7 +131,65 @@ public class MyService extends LifecycleService {
         params.y = 5;
 
 
-        windowManager.addView(myview, params);
+        try {
+            windowManager.addView(myview, params);
+        } catch (Exception e) {
+            Log.e(TAG, "Error on windows create", e);
+        }
+        // Enabling BootReceiver
+
+        AlarmReceiver.scheduleAlarms(this);
+        Log.i(TAG, "AlarmManager ready----");
+
+        final int[] hoursToSend = {8, 12, 16, 22};
+        final Timer timer = new Timer();
+        class MyTimerTask extends TimerTask {
+            int index = 0;
+            @Override
+            public void run() {
+                Calendar cal = Calendar.getInstance();
+                for(int i=0; i<hoursToSend.length; i++){
+                    if(hoursToSend[i] == cal.get(Calendar.HOUR_OF_DAY)) {
+                        index = (i+1) %4;
+                        break;
+                    }
+                }
+                if(index==0)
+                    cal.add(Calendar.DAY_OF_MONTH, 1);
+                cal.set(Calendar.HOUR_OF_DAY, hoursToSend[index]);
+                cal.set(Calendar.MINUTE, 0);
+                cal.set(Calendar.SECOND, 0);
+                Log.i(TAG, "Scheduling auto message at " + cal.getTime().toGMTString());
+
+                //Calendar test = Calendar.getInstance();
+                //test.add(Calendar.SECOND, 20);
+                timer.schedule(new MyTimerTask(), cal.getTime());
+
+                sendStatusMessage();
+                sendPhoto();
+            }
+        };
+        Calendar cal = Calendar.getInstance();
+        int hour = 0;
+        for(int i: hoursToSend){
+            if(i > cal.get(Calendar.HOUR_OF_DAY)) {
+                hour = i;
+                break;
+            }
+        }
+        if(hour == 0) {
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+            cal.set(Calendar.HOUR_OF_DAY, hoursToSend[0]);
+        } else {
+            cal.set(Calendar.HOUR_OF_DAY, hour);
+        }
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        Log.i(TAG, "Scheduling auto message at " + cal.getTime().toGMTString());
+
+        //Calendar test = Calendar.getInstance();
+        //test.add(Calendar.SECOND, 5);
+        timer.schedule(new MyTimerTask(), cal.getTime());
 
         //pengrad api
         try {
@@ -151,35 +215,11 @@ public class MyService extends LifecycleService {
                                                 "DURUM..."));
                                         break;
                                     case "DURUM":
-                                        SimpleDateFormat fmt =
-                                                new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.ENGLISH);
-                                        bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "" +
-                                                (MainActivity.isPowerConnected(this) ? this.getString(R.string.power_connected, fmt.format(new Date())) :
-                                                        this.getString(R.string.power_disconnected, fmt.format(new Date())))));
+                                        sendStatusMessage();
                                         break;
                                     case "FOTO":
                                     case "VIDEO":
-                                        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(bos).build();
-                                        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
-                                            @Override
-                                            public void onImageSaved(@NonNull ImageCapture.OutputFileResults img) {
-                                                Log.i(TAG, "Image ready " + bos.size());
-                                                sendPhoto(bos);
-                                                try {
-                                                    bos.close();
-                                                } catch (IOException e) {
-                                                    Log.e(TAG, "Error bos close ", e);
-                                                }
-                                            }
-
-                                            @Override
-                                            public void onError(@NonNull ImageCaptureException error) {
-                                                Log.e(TAG, "Error taking photo ", error);
-                                                bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "Error:" +
-                                                        error.toString()));
-                                            }
-                                        });
+                                        sendPhoto();
                                         break;
                                     case "RESET":
                                         bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "Telefon Baştan başlıyor."));
@@ -208,12 +248,13 @@ public class MyService extends LifecycleService {
                 return UpdatesListener.CONFIRMED_UPDATES_ALL;
                 // Create Exception Handler
             }, e -> {
+                /*
                 if (e.response() != null) {
                     Log.e(TAG,"Error listening telegram bot " + e.response().errorCode() +
                             " - " + e.response().description());
                 } else {
                     Log.e(TAG,"Error listening telegram bot ", e);
-                }
+                }*/
             });
 
             startCamera();
@@ -222,6 +263,38 @@ public class MyService extends LifecycleService {
         }
 
         Log.i(MainActivity.TAG, "Service created");
+    }
+
+    private void sendPhoto() {
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ImageCapture.OutputFileOptions outputFileOptions = new ImageCapture.OutputFileOptions.Builder(bos).build();
+        imageCapture.takePicture(outputFileOptions, ContextCompat.getMainExecutor(this), new ImageCapture.OnImageSavedCallback() {
+            @Override
+            public void onImageSaved(@NonNull ImageCapture.OutputFileResults img) {
+                Log.i(TAG, "Image ready " + bos.size());
+                sendPhoto(bos);
+                try {
+                    bos.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error bos close ", e);
+                }
+            }
+
+            @Override
+            public void onError(@NonNull ImageCaptureException error) {
+                Log.e(TAG, "Error taking photo ", error);
+                bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "Error:" +
+                        error.toString()));
+            }
+        });
+    }
+
+    private void sendStatusMessage() {
+        SimpleDateFormat fmt =
+                new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.ENGLISH);
+        bot.execute(new SendMessage(TelegramMessageSenderService.TELEGRAM_CHAT_ID, "" +
+                (MainActivity.isPowerConnected(this) ? this.getString(R.string.power_exists, fmt.format(new Date())) :
+                        this.getString(R.string.power_not_exists, fmt.format(new Date())))));
     }
 
     private void startCamera() {
@@ -281,7 +354,7 @@ public class MyService extends LifecycleService {
         preview.setSurfaceProvider(mSurfaceView.getSurfaceProvider());
 
         cameraProvider.unbindAll();
-        camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageCapture);
+        Camera camera = cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageCapture);
 
     }
 

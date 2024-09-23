@@ -1,62 +1,33 @@
 package com.yigitbasi.power;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.core.Camera;
-import androidx.camera.core.CameraSelector;
-import androidx.camera.core.ImageCapture;
-import androidx.camera.core.ImageCaptureException;
-import androidx.camera.core.Preview;
-import androidx.camera.core.impl.PreviewConfig;
-import androidx.camera.core.impl.UseCaseConfig;
-import androidx.camera.core.impl.UseCaseConfig.Builder;
-import androidx.camera.core.resolutionselector.ResolutionSelector;
-import androidx.camera.core.resolutionselector.ResolutionStrategy;
-import androidx.camera.lifecycle.ProcessCameraProvider;
-import androidx.camera.view.LifecycleCameraController;
-import androidx.camera.view.PreviewView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleOwner;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.Settings;
 import android.util.Log;
-import android.util.Rational;
-import android.util.Size;
-import android.view.Surface;
-import android.view.SurfaceView;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import com.pengrad.telegrambot.TelegramBot;
-import com.pengrad.telegrambot.UpdatesListener;
-import com.pengrad.telegrambot.model.Message;
-import com.pengrad.telegrambot.model.Update;
-import com.pengrad.telegrambot.request.SendMessage;
-import com.pengrad.telegrambot.request.SendPhoto;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CountDownLatch;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -92,20 +63,36 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+            if(!hasCameraPermissionGranted()) {
+                requestCameraPermission();
+            }
+            /*if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        0);
+            }
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS},
+                        0);
+            }*/
+        else {
+            initView();
+            }
+
+        Log.d(TAG, "MainActivity started");
+    }
+
+    private void initView() {
+        receiver = new PowerConnectionReceiver();
 
         TextView powerStatusTextView = findViewById(R.id.power_status_view);
 
-        receiver = new PowerConnectionReceiver();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(!hasCameraPermissionGranted())
-                requestCameraPermission();
-        }
-
         Context context = getApplicationContext();
-        Intent intent = new Intent(MainActivity.this, MyService.class); // Build the intent for the service
-        context.startService(intent);
-        Log.d(TAG, "Not service starting...");
+
+        if(Settings.canDrawOverlays(this)) {
+            Intent intent = new Intent(MainActivity.this, MyService.class); // Build the intent for the service
+            context.startService(intent);
+            Log.d(TAG, "My service starting...");
+        }
         updatePowerStatus();
 
         powerStatusTextView.setOnClickListener(v -> {
@@ -137,6 +124,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        try {
+            context.getPackageManager().setComponentEnabledSetting(new ComponentName(context, MainActivity.class),
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP);
+        } catch (Exception e) {
+            Log.e(TAG, "Error on component settings", e);
+        }
     }
 
     public static boolean isPowerConnected(Context context) {
@@ -151,9 +145,50 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestCameraPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA},
-                    0);
+            if(!Settings.canDrawOverlays(this)) {
+                int REQUEST_CODE = 101;
+                Intent myIntent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+                myIntent.setData(Uri.parse("package:" + getPackageName()));
+                Log.d(TAG, "Wait start for overlay");
+                startActivityForResult(myIntent, REQUEST_CODE);
+            }
         }
     }
 
+    @Override
+    public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(permsRequestCode,permissions, grantResults);
+        Log.v(TAG, "onRequestPermissionsResult Result.");
+        switch (permsRequestCode) {
+
+            case 0: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    initView();
+                } else {
+                    //Toast.makeText(this, "Please Grant Permissions other wise app will close.!", Toast.LENGTH_SHORT).show();
+                }
+                return;
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.v(TAG, "OnActivity Result.");
+        super.onActivityResult(requestCode, resultCode, data);
+        //check if received result code
+        //  is equal our requested code for draw permission
+        int REQUEST_CODE = 101;
+        if (requestCode == REQUEST_CODE) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M &&
+                    Settings.canDrawOverlays(this)) {
+                Log.d(TAG, "Overlay enabled...");
+                ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA,
+                                Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS},
+                        0);
+            }
+        }
+    }
 }

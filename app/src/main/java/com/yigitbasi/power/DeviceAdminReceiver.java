@@ -15,4 +15,5 @@ public class DeviceAdminReceiver extends android.app.admin.DeviceAdminReceiver {
         showToast(context, context.getString(R.string.admin_receiver_status_enabled));
     }
 
+
 }

@@ -1,8 +1,11 @@
 package com.yigitbasi.power;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.health.connect.datatypes.units.Power;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
@@ -34,9 +37,16 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
             sendTelegramMessage(context, context.getString(R.string.power_disconnected, fmt.format(new Date())));
         }else if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             Log.d(MainActivity.TAG, "Receive boot completed broadcast");
-            Intent activityIntent = new Intent(context, MainActivity.class);
-            activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(activityIntent);
+            try {
+                Intent activityIntent = new Intent(context, MainActivity.class);
+                activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(activityIntent);
+
+                //DeviceManager manager = new DeviceManager(context);
+                //manager.registerAdmin(context);
+            } catch (Throwable e) {
+                Log.e(MainActivity.TAG,"Error after boot" , e);
+            }
         }
     }
 
@@ -62,7 +72,7 @@ public class PowerConnectionReceiver extends BroadcastReceiver {
                     public void run() {
                         sendTelegramMessage(context, message);
                     }
-                }, 1000);
+                }, 30000);
             }
         });
         MyToolbox.getInstance(context).addToRequestQueue(stringRequest);
